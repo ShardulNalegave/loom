@@ -1,0 +1,31 @@
+spec: v0.6
+name: loom
+
+unikraft:
+  version: stable
+  kconfig:
+    # Enable networking
+    CONFIG_LIBUKNETDEV: 'y'
+    CONFIG_LIBUKNET: 'y'
+    CONFIG_LWIP: 'y'
+    CONFIG_LWIP_THREADS: 'y'
+    CONFIG_LWIP_SOCKET: 'y'
+    CONFIG_LWIP_TCP: 'y'
+    CONFIG_LWIP_UDP: 'y'
+    CONFIG_LWIP_DHCP: 'n'
+    
+    # Important for packet processing
+    CONFIG_LWIP_NETIF_EXT_STATUS_CALLBACK: 'y'
+    
+    # Debug (optional but helpful)
+    CONFIG_LIBUKDEBUG_PRINTD: 'n'
+
+libraries:
+  lwip:
+    version: stable
+    kconfig:
+      CONFIG_LWIP_UKNETDEV: 'y'
+
+targets:
+  - arch: x86_64
+    plat: qemu
