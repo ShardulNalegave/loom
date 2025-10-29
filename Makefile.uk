@@ -1,4 +1,7 @@
 $(eval $(call addlib,apploom))
 
-APPLOOM_SRCS-y := $(APPLOOM_BASE)/src/main.c
+APPLOOM_SRCS-y += $(APPLOOM_BASE)/src/main.c
+APPLOOM_SRCS-y += $(APPLOOM_BASE)/src/capture.c
+APPLOOM_SRCS-y += $(APPLOOM_BASE)/src/control.c
+
 APPLOOM_CINCLUDES := -I$(APPLOOM_BASE)/include
