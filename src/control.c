@@ -114,7 +114,6 @@ static void handle_client(int client_fd)
             const char *msg = "OK\n> ";
             send(client_fd, msg, strlen(msg), 0);
         }
-        /* Rate limiter commands */
         else if (strncmp(buffer, "RATELIMIT SET ", 14) == 0) {
             uint16_t port;
             uint32_t pps;
@@ -147,7 +146,6 @@ static void handle_client(int client_fd)
             const char *msg = "Listed (check console)\n> ";
             send(client_fd, msg, strlen(msg), 0);
         }
-        /* Allowlist commands */
         else if (strncmp(buffer, "ALLOW ADD ", 10) == 0) {
             uint16_t port;
             if (sscanf(buffer + 10, "%hu", &port) == 1) {
@@ -195,7 +193,6 @@ static void handle_client(int client_fd)
     close(client_fd);
 }
 
-/* Rest remains the same... */
 static void control_server_thread(void *arg)
 {
     int port = (int)(intptr_t)arg;

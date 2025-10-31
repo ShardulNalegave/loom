@@ -4,5 +4,6 @@ APPLOOM_SRCS-y += $(APPLOOM_BASE)/src/main.c
 APPLOOM_SRCS-y += $(APPLOOM_BASE)/src/capture.c
 APPLOOM_SRCS-y += $(APPLOOM_BASE)/src/control.c
 APPLOOM_SRCS-y += $(APPLOOM_BASE)/src/nf_chain.c
+APPLOOM_SRCS-y += $(APPLOOM_BASE)/src/demo_server.c
 
 APPLOOM_CINCLUDES := -I$(APPLOOM_BASE)/include

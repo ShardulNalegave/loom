@@ -5,18 +5,12 @@
 #include "lwip/prot/ip4.h"
 #include "lwip/prot/tcp.h"
 
-/* Store the original input function */
 static err_t (*original_input_fn)(struct pbuf *p, struct netif *inp) = NULL;
 
-/* Control port to bypass NF chain */
 static uint16_t control_port = 0;
 
-/* Packet statistics */
 static capture_stats_t stats = {0};
 
-/**
- * Check if packet is destined to control server
- */
 static bool is_control_packet(struct pbuf *p)
 {
     if (p->tot_len < sizeof(struct eth_hdr) + sizeof(struct ip_hdr)) {
@@ -42,27 +36,20 @@ static bool is_control_packet(struct pbuf *p)
     return (dst_port == control_port);
 }
 
-/**
- * Our packet interception hook
- * This function is called for every incoming packet
- */
 static err_t capture_input_hook(struct pbuf *p, struct netif *inp)
 {
     if (p == NULL) {
         return ERR_OK;
     }
 
-    /* Update statistics */
     stats.total_packets++;
     stats.total_bytes += p->tot_len;
 
-    /* Check if this is a control packet - if so, bypass NF chain */
     if (is_control_packet(p)) {
         stats.passed_packets++;
         return original_input_fn(p, inp);
     }
 
-    /* Pass through NF chain */
     bool allow = nf_chain_process(p);
     
     if (allow) {
@@ -90,10 +77,8 @@ int capture_hook_init(struct netif *netif, uint16_t port)
 
     control_port = port;
 
-    /* Save the original input function */
     original_input_fn = netif->input;
 
-    /* Install our hook */
     netif->input = capture_input_hook;
 
     printf("[CAPTURE] Packet capture hook installed on %c%c%d\n",

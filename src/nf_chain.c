@@ -7,46 +7,36 @@
 #include "lwip/prot/ip4.h"
 #include "lwip/prot/tcp.h"
 
-/* Head of the NF chain linked list */
 static nf_node_t *chain_head = NULL;
-
-/* ========== Rate Limiter Data Structures ========== */
 
 #define MAX_RATE_LIMITS 32
 
 typedef struct {
     uint16_t port;
-    uint32_t limit;           // packets per second
-    uint32_t count;           // current count
-    time_t last_reset;        // last time we reset the counter
+    uint32_t limit;
+    uint32_t count;
+    time_t last_reset;
 } rate_limit_t;
 
 static rate_limit_t rate_limits[MAX_RATE_LIMITS];
 static int num_rate_limits = 0;
-
-/* ========== Allowlist Data Structures ========== */
 
 #define MAX_ALLOWED_PORTS 64
 
 static uint16_t allowed_ports[MAX_ALLOWED_PORTS];
 static int num_allowed_ports = 0;
 
-/* ========== NF Chain Functions ========== */
-
 void nf_chain_init(void)
 {
     printf("[NF_CHAIN] Initializing NF chain\n");
     chain_head = NULL;
     
-    /* Initialize rate limiter */
     memset(rate_limits, 0, sizeof(rate_limits));
     num_rate_limits = 0;
     
-    /* Initialize allowlist */
     memset(allowed_ports, 0, sizeof(allowed_ports));
     num_allowed_ports = 0;
     
-    /* Register default NFs */
     nf_chain_add("rate_limiter", nf_rate_limiter);
     nf_chain_add("allowlist", nf_allowlist);
     
@@ -189,8 +179,6 @@ void nf_chain_clear(void)
     printf("[NF_CHAIN] Chain cleared\n");
 }
 
-/* ========== Rate Limiter Implementation ========== */
-
 static uint16_t get_dst_port(struct pbuf *p)
 {
     if (p->tot_len < sizeof(struct eth_hdr) + sizeof(struct ip_hdr)) {
@@ -224,10 +212,8 @@ bool nf_rate_limiter(struct pbuf *p)
     
     time_t now = time(NULL);
     
-    /* Check if we have a rate limit for this port */
     for (int i = 0; i < num_rate_limits; i++) {
         if (rate_limits[i].port == port) {
-            /* Reset counter if a second has passed */
             if (now > rate_limits[i].last_reset) {
                 rate_limits[i].count = 0;
                 rate_limits[i].last_reset = now;
@@ -245,13 +231,11 @@ bool nf_rate_limiter(struct pbuf *p)
         }
     }
     
-    /* No rate limit for this port - allow */
     return true;
 }
 
 int nf_rate_limiter_set_limit(uint16_t port, uint32_t packets_per_sec)
 {
-    /* Check if limit already exists */
     for (int i = 0; i < num_rate_limits; i++) {
         if (rate_limits[i].port == port) {
             rate_limits[i].limit = packets_per_sec;
@@ -260,7 +244,6 @@ int nf_rate_limiter_set_limit(uint16_t port, uint32_t packets_per_sec)
         }
     }
     
-    /* Add new limit */
     if (num_rate_limits >= MAX_RATE_LIMITS) {
         printf("[RATE_LIMITER] ERROR: Max limits reached\n");
         return -1;
@@ -312,11 +295,8 @@ void nf_rate_limiter_list(void)
     printf("====================\n\n");
 }
 
-/* ========== Allowlist Implementation ========== */
-
 bool nf_allowlist(struct pbuf *p)
 {
-    /* If no ports in allowlist, allow everything */
     if (num_allowed_ports == 0) {
         return true;
     }
@@ -326,7 +306,6 @@ bool nf_allowlist(struct pbuf *p)
         return true;  // Not TCP/UDP, allow it
     }
     
-    /* Check if port is in allowlist */
     for (int i = 0; i < num_allowed_ports; i++) {
         if (allowed_ports[i] == port) {
             return true;
@@ -339,7 +318,6 @@ bool nf_allowlist(struct pbuf *p)
 
 int nf_allowlist_add_port(uint16_t port)
 {
-    /* Check if already exists */
     for (int i = 0; i < num_allowed_ports; i++) {
         if (allowed_ports[i] == port) {
             printf("[ALLOWLIST] Port %u already in allowlist\n", port);
@@ -363,7 +341,6 @@ int nf_allowlist_remove_port(uint16_t port)
 {
     for (int i = 0; i < num_allowed_ports; i++) {
         if (allowed_ports[i] == port) {
-            /* Shift remaining ports down */
             for (int j = i; j < num_allowed_ports - 1; j++) {
                 allowed_ports[j] = allowed_ports[j + 1];
             }

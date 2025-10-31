@@ -5,6 +5,7 @@
 #include "loom/capture.h"
 #include "loom/control.h"
 #include "loom/nf_chain.h"
+#include "loom/demo_server.h"
 
 #define CONTROL_PORT 9000
 
@@ -15,7 +16,6 @@ int main(void)
     printf("  NFV Unikernel - Loom\n");
     printf("====================================\n\n");
 
-    /* Get default network interface */
     struct netif *netif = netif_default;
     if (!netif) {
         printf("[ERROR] No network interface available!\n");
@@ -25,11 +25,9 @@ int main(void)
     printf("[NET] Interface: %c%c%d\n", 
            netif->name[0], netif->name[1], netif->num);
 
-    /* Wait for network initialization */
     printf("[NET] Waiting for network initialization...\n");
     sleep(3);
     
-    /* Print network configuration */
     char ip_str[16], nm_str[16], gw_str[16];
     ip4addr_ntoa_r(netif_ip4_addr(netif), ip_str, sizeof(ip_str));
     ip4addr_ntoa_r(netif_ip4_netmask(netif), nm_str, sizeof(nm_str));
@@ -41,28 +39,24 @@ int main(void)
     printf("[NET] Gateway:    %s\n", gw_str);
     printf("[NET] ====================================\n\n");
 
-    /* Initialize NF chain */
     nf_chain_init();
 
-    /* Initialize packet capture hook (pass control port) */
     if (capture_hook_init(netif, CONTROL_PORT) < 0) {
         printf("[ERROR] Failed to initialize capture hook\n");
         return -1;
     }
 
-    /* Initialize control server */
     if (control_server_init(CONTROL_PORT) < 0) {
         printf("[ERROR] Failed to initialize control server\n");
         return -1;
     }
 
+    demo_server_init(9001);
+
     printf("\n====================================\n");
     printf("  System Ready!\n");
-    printf("====================================\n");
-    printf("  Control: telnet %s %d\n", ip_str, CONTROL_PORT);
     printf("====================================\n\n");
 
-    /* Main loop */
     while (1) {
         uk_sched_yield();
     }
