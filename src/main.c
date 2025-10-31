@@ -4,6 +4,7 @@
 #include "lwip/netif.h"
 #include "loom/capture.h"
 #include "loom/control.h"
+#include "loom/nf_chain.h"
 
 #define CONTROL_PORT 9000
 
@@ -40,8 +41,11 @@ int main(void)
     printf("[NET] Gateway:    %s\n", gw_str);
     printf("[NET] ====================================\n\n");
 
-    /* Initialize packet capture hook */
-    if (capture_hook_init(netif) < 0) {
+    /* Initialize NF chain */
+    nf_chain_init();
+
+    /* Initialize packet capture hook (pass control port) */
+    if (capture_hook_init(netif, CONTROL_PORT) < 0) {
         printf("[ERROR] Failed to initialize capture hook\n");
         return -1;
     }
